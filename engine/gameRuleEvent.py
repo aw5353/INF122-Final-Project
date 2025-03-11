@@ -1,4 +1,4 @@
-from gameEvent import GameEvent
+from engine.gameEvent import GameEvent
 from typing import Callable
 
 class GameRuleEvent(GameEvent):

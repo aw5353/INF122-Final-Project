@@ -1,4 +1,4 @@
-from tile import Tile
+from engine.tile import Tile
 
 
 class Board:
@@ -9,4 +9,5 @@ class Board:
         return self.grid
 
     def displayBoard(self):
-        pass
+        for row in self.grid:
+            print([tile.point_value for tile in row])
