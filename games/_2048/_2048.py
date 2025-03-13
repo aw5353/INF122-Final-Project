@@ -3,7 +3,7 @@ from engine.player import Player
 from engine.gameRuleEvent import GameRuleEvent
 from engine.playerInputEvent import PlayerInputEvent
 from engine.tile import Tile
-from random import Random
+from random import choice, random
 from enum import Enum
 
 BOARD_HEIGHT = 4
@@ -23,57 +23,62 @@ class Game2048(Game):
         self.width = width
         self.state: GameState = GameState.IDLE
         super().__init__(list([player]), board, None)
+        self.events.append(SpawnTile(self))
 
     def check_boundary(self, x, y):
         return 0 <= x < self.height and 0 <= y < self.width
     
     def move_tiles(self, direction):
+        def get_value(cell):
+            return cell.point_value if hasattr(cell, "point_value") else cell
+
+        def board_snapshot(board):
+            return [[get_value(cell) for cell in row] for row in board]
+
         def slide(row):
-            new_row = [tile for tile in row if tile]
-            for i in range(len(new_row) - 1):
-                if new_row[i] == new_row[i + 1]:
-                    new_row[i] *= 2
+            new_row = [cell for cell in row if cell]
+            i = 0
+            while i < len(new_row) - 1:
+                if get_value(new_row[i]) == get_value(new_row[i + 1]):
+                    combined_value = get_value(new_row[i]) * 2
+                    if hasattr(new_row[i], "point_value"):
+                        new_row[i].point_value = combined_value
+                    else:
+                        new_row[i] = combined_value
                     new_row[i + 1] = 0
-            new_row = [tile for tile in new_row if tile]
+                    i += 2
+                else:
+                    i += 1
+            new_row = [cell for cell in new_row if get_value(cell) != 0]
             return new_row + [0] * (self.width - len(new_row))
 
-        rotated = False
-        if direction == "Up":
+        old_snapshot = board_snapshot(self.gameBoard)
+
+        if direction == "Left":
+            for i in range(self.height):
+                self.gameBoard[i] = slide(self.gameBoard[i])
+        elif direction == "Right":
+            for i in range(self.height):
+                self.gameBoard[i] = slide(self.gameBoard[i][::-1])[::-1]
+        elif direction == "Up":
             self.gameBoard = [list(col) for col in zip(*self.gameBoard)]
-            rotated = True
+            for i in range(self.width):
+                self.gameBoard[i] = slide(self.gameBoard[i])
+            self.gameBoard = [list(col) for col in zip(*self.gameBoard)]
         elif direction == "Down":
-            self.gameBoard = [list(col[::-1]) for col in zip(*self.gameBoard)] 
-            rotated = True
-        elif direction == "Right":
-            self.gameBoard = [row[::-1] for row in self.gameBoard]
+            self.gameBoard = [list(col) for col in zip(*self.gameBoard)]
+            for i in range(self.width):
+                self.gameBoard[i] = slide(self.gameBoard[i][::-1])[::-1]
+            self.gameBoard = [list(col) for col in zip(*self.gameBoard)]
 
-        for i in range(self.height):
-            self.gameBoard[i] = slide(self.gameBoard[i])
+        new_snapshot = board_snapshot(self.gameBoard)
 
-        if rotated:
-            if direction == "Up":
-                self.gameBoard = [list(col) for col in zip(*self.gameBoard)]
-            else:
-                self.gameBoard = [list(col[::-1]) for col in zip(*self.gameBoard)]
-
-        elif direction == "Right":
-            self.gameBoard = [row[::-1] for row in self.gameBoard]
-
-        self.events.append(SpawnTile(self))
-    
-    def update(self):
-        pass  # Implement game logic update
+        if new_snapshot != old_snapshot:
+            self.events.append(SpawnTile(self))
     
     def process_input(self, command):
         self.move_tiles(command)
         self.spawn_tile()
-
-    def render(self):
-        pass
-
-if __name__ == "__main__":
-    game = Game2048()
-    game.render()
 
 class UpKey(PlayerInputEvent):
     def __init__(self, game: Game2048):
@@ -91,24 +96,25 @@ class LeftKey(PlayerInputEvent):
         super().__init__("Left", lambda: game.move_tiles("Left"))
         
 class SpawnTile(GameRuleEvent):
-    def init(self, game: Game2048):
-        super().init("Spawn New Tile", lambda: self.spawn_tile())
+    def __init__(self, game: Game2048):
+        super().__init__("Spawn New Tile", lambda: self.spawn_tile())
         self.game = game
 
     def spawn_tile(self):
-        empty_tiles = [(r, c) for r in range(game.height) for c in range(game.width) if not game.board[r][c]]
+        empty_tiles = [(r, c) for r in range(self.game.height) for c in range(self.game.width) if not self.game.gameBoard[r][c]]
         if empty_tiles:
-            r, c = Random.choice(empty_tiles)
-            new_value = 2 if Random.random() < 0.9 else 4
-            self.game.board[r][c] = Tile(r,c, new_value)
+            r, c = choice(empty_tiles)
+            new_value = 2 if random() < 0.9 else 4
+            self.game.gameBoard[r][c] = Tile(r,c, new_value)
         
 class CheckWin(GameRuleEvent):
     def __init__(self, game: Game2048):
         super().__init__("Check Win", lambda: self.check_win(game))
 
     def check_win(self, game: Game2048):
-        if any(tile and tile.value == 2048 for row in game.gameBoard for tile in row):
+        if any(tile and tile.point_value == 2048 for row in game.gameBoard for tile in row):
             game.state = GameState.WIN
+            print("You Won!")
 
 class CheckLoss(GameRuleEvent):
     def __init__(self, game: Game2048):
@@ -117,3 +123,4 @@ class CheckLoss(GameRuleEvent):
     def check_loss(self, game: Game2048):
         if all(game.gameBoard[r][c] for r in range(game.height) for c in range(game.width)):
             game.state = GameState.LOST
+            print("You Lost!")

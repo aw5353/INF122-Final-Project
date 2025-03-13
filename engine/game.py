@@ -18,5 +18,6 @@ class Game:
   def updateDisplay(self) -> None:
       print("Updating game display...")
 
-  def handleEvents(self, event) -> None:
-      print(f"Handling event: {event}")
+  def handleEvents(self) -> None:
+      event = self.events.popleft()
+      event.execute()
