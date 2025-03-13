@@ -51,6 +51,9 @@ class Application:
                     self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="#bbada0", width=5)
                     self.canvas.create_text((x0 + x1) // 2, (y0 + y1) // 2, text=str(tile.point_value),
                                             font=("Arial", 24, "bold"), fill="white" if tile.point_value > 4 else "black")
+                else:
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.colors.get(0, "#3c3a32"), outline="#bbada0", width=5)
+                
 
     def on_key(self, event):
         key = event.keysym
