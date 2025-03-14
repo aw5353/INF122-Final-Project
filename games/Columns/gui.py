@@ -47,8 +47,7 @@ class ColumnsGUI:
         self.root.bind('<Up>', lambda e: self.rotate_piece())
         self.root.bind('<Down>', lambda e: self.force_drop())
 
-        self.drop_speed = 300
-        self.update_interval = 8
+        self.update_interval = 16
         self.start_game()
 
     def draw_board(self):
