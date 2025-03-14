@@ -1,10 +1,16 @@
+import sys
+from pathlib import Path
+
+# Add parent directory to Python path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
 import random
-from game import Game
-from board import Board
-from timer import Timer
+from engine.board import Board
+from engine.game import Game
+from engine.timer import Timer
 
 class ColumnsGame(Game):
-  def __init__(self, rows=10, columns=6):
+  def __init__(self, rows=14, columns=6):
     super().__init__(gameBoard=Board(rows, columns, default_point_value=0), timer=Timer())
     self.current_piece = self.generate_piece()
     self.piece_col = random.randrange(6)
