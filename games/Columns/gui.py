@@ -7,9 +7,11 @@ from tkinter import messagebox
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from columns import ColumnsGame
+from engine.timer import Timer
 
 class ColumnsGUI:
     def __init__(self):
+        self.timer = Timer()
         self.root = Tk()
         self.root.title("Columns Game")
         
@@ -45,9 +47,8 @@ class ColumnsGUI:
         self.root.bind('<Up>', lambda e: self.rotate_piece())
         self.root.bind('<Down>', lambda e: self.force_drop())
 
-        self.update_id = None
         self.drop_speed = 300
-        self.after_move_update = 50
+        self.update_interval = 8
         self.start_game()
 
     def draw_board(self):
@@ -137,15 +138,22 @@ class ColumnsGUI:
             if (self.game.piece_row == 0 and 
                 self.game.gameBoard.getBoardState()[0][self.game.piece_col].point_value != 0):
                 self.game.running = False
-                messagebox.showinfo("Game Over", "Game Over!")
+                self.timer.stop()
+                messagebox.showinfo("Game Over", f"Game Over!\nYou lasted {int(self.timer.tick/60)+1} seconds")
                 self.root.destroy()
                 return
 
-            self.update_id = self.root.after(self.drop_speed, self.update_game)
+    def game_loop(self):
+        if self.timer.is_running:
+            self.timer.update()
+            if self.timer.tick % self.update_interval == 0:
+                self.update_game()
+            self.root.after(self.update_interval, self.game_loop)
 
     def start_game(self):
+        self.timer.start()
         self.draw_board()
-        self.update_game()
+        self.game_loop()
 
 if __name__ == "__main__":
     app = ColumnsGUI()
