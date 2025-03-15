@@ -1,15 +1,11 @@
-import sys
-from pathlib import Path
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
-from columns import ColumnsGame
+from .columns import ColumnsGame
 from engine.timer import Timer
 
-class ColumnsGUI:
+class Application:
     def __init__(self):
         self.timer = Timer()
         self.root = Tk()
@@ -154,6 +150,9 @@ class ColumnsGUI:
         self.draw_board()
         self.game_loop()
 
+    def run(self):
+        self.root.mainloop()
+
 if __name__ == "__main__":
-    app = ColumnsGUI()
-    app.root.mainloop()
+    app = Application()
+    app.run()
