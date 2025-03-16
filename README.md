@@ -26,3 +26,6 @@ To run this game, you need to have the latest version of Python installed on you
    ```  
 
 Enjoy the game! 🎮  
+
+## Columns
+Columns is a two-player tile-matching game where users take turns dropping gems onto the board to compete for the highest score. Player 1 can control their gem via the arrow keys (↑ ↓ → ←). Player 2 can control their gem via the WASD keys. The objective is to match at least 3 of the same colors  
