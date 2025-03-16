@@ -11,6 +11,8 @@ class ColumnsGame(Game):
     self.piece_row = 0
     self.running = True
     self.score = 0
+    self.piece_locked = False
+    self.last_score = 0
 
   def generate_piece(self):
     colors = ['R', 'Y', 'G', 'F' , 'L']
@@ -73,6 +75,8 @@ class ColumnsGame(Game):
     self.current_piece = self.generate_piece()
     self.piece_row = 0
     self.piece_col = random.randrange(6)
+    self.piece_locked = True
+    self.last_score = self.score
 
   def play(self):
     while self.running:
