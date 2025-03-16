@@ -138,7 +138,7 @@ class ColumnsGUI:
                 self.game.gameBoard.getBoardState()[0][self.game.piece_col].point_value != 0):
                 self.game.running = False
                 self.timer.stop()
-                messagebox.showinfo("Game Over", f"Game Over!\nYou lasted {int(self.timer.tick/60)+1} seconds")
+                messagebox.showinfo("Game Over", f"Game Over!\nScore: {self.game.score}\nYou lasted {int(self.timer.tick/60)+1} seconds")
                 self.root.destroy()
                 return
 
