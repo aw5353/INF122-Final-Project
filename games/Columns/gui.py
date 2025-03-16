@@ -125,6 +125,22 @@ class Application:
             self.game.lock_piece()
             self.draw_board()
 
+    def reset_game(self):
+        self.game = ColumnsGame()
+        self.timer.reset()
+        self.start_game()
+
+    def game_over_prompt(self):
+        self.timer.stop()
+        response = messagebox.askyesno(
+            "Game Over",
+            f"Game Over!\nScore: {self.game.score}\nYou lasted {int(self.timer.tick/60) + 1} seconds\n\nWould you like to play again?"
+        )
+        if response:
+            self.reset_game()
+        else:
+            self.root.destroy()
+
     def update_game(self):
         if self.game.running:
             self.game.drop_piece()
@@ -133,9 +149,7 @@ class Application:
             if (self.game.piece_row == 0 and 
                 self.game.gameBoard.getBoardState()[0][self.game.piece_col].point_value != 0):
                 self.game.running = False
-                self.timer.stop()
-                messagebox.showinfo("Game Over", f"Game Over!\nScore: {self.game.score}\nYou lasted {int(self.timer.tick/60)+1} seconds")
-                self.root.destroy()
+                self.game_over_prompt()
                 return
 
     def game_loop(self):
