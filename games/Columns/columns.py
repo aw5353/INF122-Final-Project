@@ -10,6 +10,7 @@ class ColumnsGame(Game):
     self.piece_col = random.randrange(6)
     self.piece_row = 0
     self.running = True
+    self.score = 0
 
   def generate_piece(self):
     colors = ['R', 'Y', 'G', 'F' , 'L']
@@ -52,6 +53,8 @@ class ColumnsGame(Game):
         if board[r][c].point_value != 0 and board[r][c].point_value == board[r+1][c].point_value == board[r+2][c].point_value:
           matched_positions.update([(r, c), (r+1, c), (r+2, c)])
 
+    self.score += len(matched_positions) // 3 * 10
+
     for r, c in matched_positions:
       board[r][c].point_value = 0
 
@@ -93,7 +96,9 @@ class ColumnsGame(Game):
     for i in range(3):
       if 0 <= self.piece_row - i < len(display_grid):
         display_grid[self.piece_row - i][self.piece_col] = self.current_piece[i]
-  
+
+    print("Score:", self.score)
+
     for row in display_grid:
       print(row)
     print("\n")
