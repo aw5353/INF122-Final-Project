@@ -14,6 +14,8 @@ class Application:
         self.frm = ttk.Frame(self.root, padding=10)
         
         self.game = ColumnsGame()
+        self.current_player = 1
+        self.scores = {1: 0, 2: 0}
         
         self.colors = {
             'R': 'red',
@@ -38,10 +40,24 @@ class Application:
         )
         self.canvas.pack()
 
-        self.root.bind('<Left>', lambda e: self.move_piece(-1))
-        self.root.bind('<Right>', lambda e: self.move_piece(1))
-        self.root.bind('<Up>', lambda e: self.rotate_piece())
-        self.root.bind('<Down>', lambda e: self.force_drop())
+        self.info_frame = ttk.Frame(self.root)
+        self.info_frame.pack(side=TOP, pady=5)
+        
+        self.player_label = ttk.Label(self.info_frame, text="Player 1's Turn")
+        self.player_label.pack(side=LEFT, padx=10)
+        
+        self.score_label = ttk.Label(self.info_frame, text="P1: 0 | P2: 0")
+        self.score_label.pack(side=LEFT, padx=10)
+
+        self.root.bind('<Left>', lambda e: self.handle_input(1, 'left'))
+        self.root.bind('<Right>', lambda e: self.handle_input(1, 'right'))
+        self.root.bind('<Up>', lambda e: self.handle_input(1, 'rotate'))
+        self.root.bind('<Down>', lambda e: self.handle_input(1, 'drop'))
+        
+        self.root.bind('a', lambda e: self.handle_input(2, 'left'))
+        self.root.bind('d', lambda e: self.handle_input(2, 'right'))
+        self.root.bind('w', lambda e: self.handle_input(2, 'rotate'))
+        self.root.bind('s', lambda e: self.handle_input(2, 'drop'))
 
         self.update_interval = 16
         self.start_game()
@@ -125,6 +141,36 @@ class Application:
             self.game.lock_piece()
             self.draw_board()
 
+    def reset_game(self):
+        self.game = ColumnsGame()
+        self.current_player = 1
+        self.scores = {1: 0, 2: 0}
+        self.player_label.config(text="Player 1's Turn")
+        self.score_label.config(text="P1: 0 | P2: 0")
+        self.timer.reset()
+        self.start_game()
+
+    def game_over_prompt(self):
+        self.timer.stop()
+        winner = 1 if self.scores[1] > self.scores[2] else 2
+        if self.scores[1] == self.scores[2]:
+            winner_text = "It's a tie!"
+        else:
+            winner_text = f"Player {winner} wins!"
+            
+        response = messagebox.askyesno(
+            "Game Over",
+            f"Game Over!\n{winner_text}\n"
+            f"Player 1 Score: {self.scores[1]}\n"
+            f"Player 2 Score: {self.scores[2]}\n"
+            f"Time played: {int(self.timer.tick/60) + 1} seconds\n\n"
+            "Would you like to play again?"
+        )
+        if response:
+            self.reset_game()
+        else:
+            self.root.destroy()
+
     def update_game(self):
         if self.game.running:
             self.game.drop_piece()
@@ -133,10 +179,16 @@ class Application:
             if (self.game.piece_row == 0 and 
                 self.game.gameBoard.getBoardState()[0][self.game.piece_col].point_value != 0):
                 self.game.running = False
-                self.timer.stop()
-                messagebox.showinfo("Game Over", f"Game Over!\nYou lasted {int(self.timer.tick/60)+1} seconds")
-                self.root.destroy()
+                self.game_over_prompt()
                 return
+            
+            # Check if piece is locked and switch players
+            if self.game.piece_locked:
+                self.scores[self.current_player] += self.game.last_score
+                self.current_player = 2 if self.current_player == 1 else 1
+                self.player_label.config(text=f"Player {self.current_player}'s Turn")
+                self.score_label.config(text=f"P1: {self.scores[1]} | P2: {self.scores[2]}")
+                self.game.piece_locked = False
 
     def game_loop(self):
         if self.timer.is_running:
@@ -152,6 +204,20 @@ class Application:
 
     def run(self):
         self.root.mainloop()
+
+    def handle_input(self, player, action):
+        """Handle player input based on current turn"""
+        if not self.game.running or player != self.current_player:
+            return
+            
+        if action == 'left':
+            self.move_piece(-1)
+        elif action == 'right':
+            self.move_piece(1)
+        elif action == 'rotate':
+            self.rotate_piece()
+        elif action == 'drop':
+            self.force_drop()
 
 if __name__ == "__main__":
     app = Application()

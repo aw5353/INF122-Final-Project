@@ -46,6 +46,7 @@ class Game2048(Game):
                     else:
                         new_row[i] = combined_value
                     new_row[i + 1] = 0
+                    self.players[0].score += combined_value
                     i += 2
                 else:
                     i += 1
