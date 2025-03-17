@@ -14,10 +14,7 @@ class Game:
 
   def addPlayer(self, newPlayer: Player) -> None:
       self.players.append(newPlayer)
-
-  def updateDisplay(self) -> None:
-      print("Updating game display...")
-
+      
   def handleEvents(self) -> None:
       event = self.events.popleft()
       event.execute()
