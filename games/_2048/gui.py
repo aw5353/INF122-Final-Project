@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 
 from ._2048 import *
 
@@ -11,13 +12,12 @@ class Application:
         self.game2 = Game2048()
         self.frm = ttk.Frame(self.root, padding=10)
         self.root.title("2048 - Two Players")
-        self.root.geometry("1600x800")  # Increased width to accommodate two boards
+        self.root.geometry("1600x800")
         self.bind_keys()
         self.size = 4
         self.cell_size = 100
         self.grid_padding = 10
 
-        # Create two canvases side by side
         self.canvas1 = Canvas(self.root,
                      width=self.size * self.cell_size + (self.size + 1) * self.grid_padding,
                      height=self.size * self.cell_size + (self.size + 1) * self.grid_padding,
@@ -134,14 +134,40 @@ class Application:
             self.game2.events.append(CheckWin(self.game2))
             self.game2.events.append(CheckLoss(self.game2))
 
+    def check_game_over(self, game, player_num):
+        """Check if the game is over and show appropriate message"""
+        # Check if any tile has reached 2048 (win condition)
+        won = any(tile and tile.point_value >= 2048 
+                for row in game.gameBoard 
+                for tile in row)
+        
+        if won:
+            score = game.players[0].score
+            messagebox.showinfo("Game Over!", f"Player {player_num} Wins!\nScore: {score}")
+            self.reset_game()
+
     def process_events(self):
+        """Process events for both games safely."""
         if self.game1.events:
             self.game1.handleEvents()
+            self.check_game_over(self.game1, 1)
         if self.game2.events:
             self.game2.handleEvents()
+            self.check_game_over(self.game2, 2)
 
         self.update_grid()
-        self.root.after(100, self.process_events)
+        self.root.after(1, self.process_events)
+
+    def reset_game(self):
+        """Resets both games and updates the UI."""
+        self.game1 = Game2048()
+        self.game2 = Game2048()
+        # Clear any pending events
+        if hasattr(self.game1, 'events'):
+            self.game1.events.clear()
+        if hasattr(self.game2, 'events'):
+            self.game2.events.clear()
+        self.update_grid()
 
     def bind_keys(self):
         # Bind arrow keys for player 1
